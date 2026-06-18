@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testdaten-Generator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0c0c1a; color: #e8e8ff;
+    min-height: 100vh; padding: 2rem;
+  }
+  h1 { font-size: 1.2rem; color: #818cf8; margin-bottom: 0.3rem; }
+  .subtitle { font-size: 0.85rem; color: #4b5280; margin-bottom: 2rem; }
+
+  .card {
+    background: #14142a; border: 1px solid #252545;
+    border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .card h2 { font-size: 0.9rem; color: #818cf8; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  label { display: block; font-size: 0.8rem; color: #9ca3af; margin-bottom: 0.3rem; margin-top: 0.8rem; }
+  input[type="text"], input[type="number"], textarea {
+    width: 100%; padding: 0.55rem 0.8rem;
+    background: #0c0c1a; border: 1px solid #252545;
+    border-radius: 6px; color: #e8e8ff; font-size: 0.9rem;
+    outline: none; font-family: 'Courier New', monospace;
+  }
+  input:focus, textarea:focus { border-color: #818cf8; }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 150px; }
+
+  /* TN-Liste */
+  #tn-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.8rem; }
+  .tn-row {
+    display: flex; gap: 0.6rem; align-items: center;
+    background: #0c0c1a; border: 1px solid #252545;
+    border-radius: 8px; padding: 0.5rem 0.8rem;
+  }
+  .tn-row input { flex: 1; background: transparent; border: none; border-bottom: 1px solid #252545; border-radius: 0; padding: 0.2rem 0; }
+  .tn-row input:focus { border-bottom-color: #818cf8; }
+  .tn-label { font-size: 0.75rem; color: #4b5280; white-space: nowrap; }
+  .tn-del { background: none; border: none; color: #fca5a5; cursor: pointer; font-size: 0.9rem; opacity: 0.4; }
+  .tn-del:hover { opacity: 1; }
+
+  button.btn {
+    padding: 0.5rem 1.2rem; border-radius: 8px;
+    border: 1px solid #252545; background: transparent;
+    color: #818cf8; font-size: 0.85rem; cursor: pointer;
+    transition: background 0.15s; margin-top: 0.8rem;
+  }
+  button.btn:hover { background: #1f1f45; }
+  button.btn.primary { background: #818cf8; color: #0c0c1a; border-color: #818cf8; font-weight: 700; }
+  button.btn.primary:hover { background: #6366f1; }
+  button.btn.danger { border-color: #7f1d1d; color: #fca5a5; }
+  button.btn.danger:hover { background: #3f0f0f; }
+
+  /* Log */
+  #log {
+    font-family: 'Courier New', monospace; font-size: 0.78rem;
+    background: #0c0c1a; border: 1px solid #252545;
+    border-radius: 8px; padding: 1rem;
+    max-height: 300px; overflow-y: auto;
+    white-space: pre-wrap; line-height: 1.6;
+    margin-top: 1rem;
+  }
+  .log-ok   { color: #6ee7b7; }
+  .log-err  { color: #fca5a5; }
+  .log-info { color: #818cf8; }
+  .log-dim  { color: #4b5280; }
+
+  /* Iterationsvorschau */
+  #preview-table {
+    width: 100%; border-collapse: collapse; font-size: 0.78rem;
+    font-family: 'Courier New', monospace; margin-top: 0.8rem;
+  }
+  #preview-table th {
+    text-align: left; padding: 0.3rem 0.6rem;
+    border-bottom: 1px solid #252545; color: #4b5280;
+    font-weight: 600; font-size: 0.7rem; text-transform: uppercase;
+  }
+  #preview-table td { padding: 0.3rem 0.6rem; border-bottom: 1px solid #1a1a2e; }
+  #preview-table tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+<h1>🧪 Testdaten-Generator</h1>
+<p class="subtitle">Füllt Firebase mit simulierten Newton-Iterationen für beliebig viele Teilnehmer.</p>
+
+<!-- Firebase -->
+<div class="card">
+  <h2>Firebase</h2>
+  <label>Firebase-URL</label>
+  <input type="text" id="fb-url" value="https://iteration-visualizer-default-rtdb.europe-west1.firebasedatabase.app/" />
+  <label>Kurs-ID</label>
+  <input type="text" id="kurs-id" value="kurs1" />
+</div>
+
+<!-- Polynom -->
+<div class="card">
+  <h2>Funktion f(x)</h2>
+  <p style="font-size:0.78rem;color:#4b5280;margin-bottom:0.5rem;">
+    JavaScript-Ausdruck, z.B. <code style="color:#818cf8;">x*x - 2</code> oder <code style="color:#818cf8;">x*x*x - x - 2</code>
+  </p>
+  <label>f(x) =</label>
+  <input type="text" id="fx" value="x*x - 2" placeholder="x*x - 2" />
+  <label>f'(x) = (Ableitung, für Newton)</label>
+  <input type="text" id="dfx" value="2*x" placeholder="2*x" />
+  <div style="margin-top:0.8rem;display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;">
+    <button class="btn" onclick="updatePreview()">Vorschau aktualisieren</button>
+    <span style="font-size:0.78rem;color:#4b5280;" id="root-hint"></span>
+  </div>
+</div>
+
+<!-- Teilnehmer -->
+<div class="card">
+  <h2>Teilnehmer</h2>
+  <div id="tn-list"></div>
+  <button class="btn" onclick="addTN()">+ Teilnehmer hinzufügen</button>
+</div>
+
+<!-- Schritte -->
+<div class="card">
+  <h2>Iteration</h2>
+  <div class="row">
+    <div>
+      <label>Anzahl Schritte k</label>
+      <input type="number" id="steps" value="6" min="1" max="20" />
+    </div>
+    <div>
+      <label>Dezimalstellen (Ausgabe)</label>
+      <input type="number" id="decimals" value="10" min="1" max="15" />
+    </div>
+  </div>
+
+  <!-- Vorschau-Tabelle -->
+  <div id="preview-wrap" style="display:none;">
+    <div style="font-size:0.78rem;color:#4b5280;margin-top:1rem;margin-bottom:0.3rem;">Iterationsvorschau:</div>
+    <table id="preview-table"><thead></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- Aktionen -->
+<div class="card">
+  <h2>Aktionen</h2>
+  <div style="display:flex;gap:0.8rem;flex-wrap:wrap;">
+    <button class="btn primary" onclick="generate()">▶ In Firebase schreiben</button>
+    <button class="btn" onclick="updatePreview()">🔍 Nur Vorschau</button>
+    <button class="btn danger" onclick="clearDB()">✕ Firebase leeren</button>
+  </div>
+  <div id="log"></div>
+</div>
+
+<script>
+var COLORS = ['#818cf8','#6ee7b7','#fcd34d','#f9a8d4','#7dd3fc','#c4b5fd','#fda4af','#86efac','#fdba74','#a5f3fc'];
+var tnData = [
+  { name: 'TN1', x0: '2' },
+  { name: 'TN2', x0: '1.5' },
+  { name: 'TN3', x0: '-1' },
+];
+
+function $(id) { return document.getElementById(id); }
+
+function renderTNList() {
+  $('tn-list').innerHTML = tnData.map(function(tn, i) {
+    var c = COLORS[i % COLORS.length];
+    return '<div class="tn-row">' +
+      '<div style="width:8px;height:8px;border-radius:50%;background:'+c+';flex-shrink:0;"></div>' +
+      '<span class="tn-label">Name</span>' +
+      '<input type="text" value="'+esc(tn.name)+'" oninput="tnData['+i+'].name=this.value" style="max-width:120px;" />' +
+      '<span class="tn-label">x₀</span>' +
+      '<input type="text" value="'+esc(tn.x0)+'" oninput="tnData['+i+'].x0=this.value" style="max-width:120px;" />' +
+      '<button class="tn-del" onclick="removeTN('+i+')">✕</button>' +
+    '</div>';
+  }).join('');
+}
+
+function addTN() {
+  tnData.push({ name: 'TN' + (tnData.length + 1), x0: '1' });
+  renderTNList();
+}
+
+function removeTN(i) {
+  tnData.splice(i, 1);
+  renderTNList();
+}
+
+// Newton-Iteration
+function evalF(expr, x) {
+  try { return Function('x', 'return (' + expr + ')')(x); }
+  catch(e) { throw new Error('Fehler in f(x): ' + e.message); }
+}
+
+function newton(fx, dfx, x0, steps, decimals) {
+  var results = [];
+  var x = parseFloat(x0);
+  if (isNaN(x)) throw new Error('Ungültiger Startwert: ' + x0);
+  for (var i = 1; i <= steps; i++) {
+    var fx_val  = evalF(fx,  x);
+    var dfx_val = evalF(dfx, x);
+    if (Math.abs(dfx_val) < 1e-15) throw new Error('f\'(x) ≈ 0 bei x=' + x + ', Division durch 0');
+    x = x - fx_val / dfx_val;
+    results.push({ step: i, value: x.toFixed(decimals) });
+  }
+  return results;
+}
+
+function updatePreview() {
+  var fx  = $('fx').value.trim();
+  var dfx = $('dfx').value.trim();
+  var steps = parseInt($('steps').value);
+  var dec   = parseInt($('decimals').value);
+
+  // Nullstelle schätzen
+  try {
+    var hint = '';
+    // Brute-force Nullstellensuche im Bereich [-100, 100]
+    for (var x = -10; x <= 10; x += 0.1) {
+      var f1 = evalF(fx, x), f2 = evalF(fx, x + 0.1);
+      if (f1 * f2 < 0) { hint = '≈ ' + ((x + x + 0.1) / 2).toFixed(6); break; }
+    }
+    $('root-hint').textContent = hint ? 'Nullstelle ' + hint : '';
+  } catch(e) {}
+
+  var thead = $('preview-table').querySelector('thead');
+  var tbody = $('preview-table').querySelector('tbody');
+
+  try {
+    // Header
+    var headers = ['Schritt'];
+    tnData.forEach(function(tn) { headers.push(tn.name + ' (x₀=' + tn.x0 + ')'); });
+    thead.innerHTML = '<tr>' + headers.map(function(h){ return '<th>'+esc(h)+'</th>'; }).join('') + '</tr>';
+
+    // Berechne alle TN
+    var allResults = tnData.map(function(tn) {
+      return newton(fx, dfx, tn.x0, steps, dec);
+    });
+
+    // Zeilen
+    tbody.innerHTML = '';
+    for (var s = 0; s < steps; s++) {
+      var row = '<tr><td style="color:#4b5280;">' + (s+1) + '</td>';
+      allResults.forEach(function(res, ti) {
+        var c = COLORS[ti % COLORS.length];
+        row += '<td style="color:'+c+';">' + (res[s] ? res[s].value : '—') + '</td>';
+      });
+      row += '</tr>';
+      tbody.innerHTML += row;
+    }
+    $('preview-wrap').style.display = 'block';
+    log('Vorschau aktualisiert (' + tnData.length + ' TN, ' + steps + ' Schritte)', 'info');
+  } catch(e) {
+    log('Fehler: ' + e.message, 'err');
+  }
+}
+
+async function generate() {
+  var fbUrl  = $('fb-url').value.replace(/\/+$/, '');
+  var kursId = $('kurs-id').value.trim();
+  var fx     = $('fx').value.trim();
+  var dfx    = $('dfx').value.trim();
+  var steps  = parseInt($('steps').value);
+  var dec    = parseInt($('decimals').value);
+
+  if (!fbUrl) { log('Firebase-URL fehlt!', 'err'); return; }
+
+  log('Starte Generierung...', 'info');
+  var total = 0, errors = 0;
+
+  for (var ti = 0; ti < tnData.length; ti++) {
+    var tn = tnData[ti];
+    var clientKey = 'test' + tn.name.replace(/[^a-zA-Z0-9]/g,'') + ti;
+    var results;
+    try {
+      results = newton(fx, dfx, tn.x0, steps, dec);
+    } catch(e) {
+      log('✗ ' + tn.name + ': ' + e.message, 'err');
+      errors++;
+      continue;
+    }
+
+    for (var si = 0; si < results.length; si++) {
+      var r = results[si];
+      var entry = {
+        name:  tn.name,
+        x0:    tn.x0,
+        step:  r.step,
+        value: r.value,
+        ts:    Date.now() + ti * 1000 + si
+      };
+      var key = clientKey + 's' + r.step;
+      var url = fbUrl + '/' + kursId + '/submissions/' + key + '.json';
+      try {
+        var resp = await fetch(url, { method: 'PUT', body: JSON.stringify(entry),
+          headers: { 'Content-Type': 'application/json' } });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        log('✓ ' + tn.name + ' Schritt ' + r.step + ': ' + r.value, 'ok');
+        total++;
+      } catch(e) {
+        log('✗ ' + tn.name + ' Schritt ' + r.step + ': ' + e.message, 'err');
+        errors++;
+      }
+    }
+  }
+
+  log('─────────────────────────────', 'dim');
+  log('Fertig: ' + total + ' Einträge geschrieben' + (errors ? ', ' + errors + ' Fehler' : ''), errors ? 'err' : 'ok');
+}
+
+function clearDB() {
+  var fbUrl  = $('fb-url').value.replace(/\/+$/, '');
+  var kursId = $('kurs-id').value.trim();
+  if (!confirm('Firebase /' + kursId + ' komplett leeren?')) return;
+  fetch(fbUrl + '/' + kursId + '/submissions.json', { method: 'DELETE' })
+    .then(function() { log('Firebase geleert.', 'info'); })
+    .catch(function(e) { log('Fehler: ' + e.message, 'err'); });
+}
+
+var logLines = [];
+function log(msg, type) {
+  logLines.push('<span class="log-'+(type||'dim')+'">'+esc(msg)+'</span>');
+  var el = $('log');
+  el.innerHTML = logLines.join('\n');
+  el.scrollTop = el.scrollHeight;
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Init
+renderTNList();
+updatePreview();
+</script>
+</body>
+</html>

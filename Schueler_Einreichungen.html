@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Newton-Verfahren – Schülereingabe</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem 1.75rem;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.09);
+  }
+  h1 { font-size: 1.35rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.2rem; }
+  .subtitle { font-size: 0.88rem; color: #6b7280; margin-bottom: 1.75rem; }
+
+  label { display: block; font-size: 0.82rem; font-weight: 600; color: #374151; margin-bottom: 0.35rem; margin-top: 1rem; }
+  input[type="text"], input[type="number"] {
+    width: 100%; padding: 0.65rem 0.9rem;
+    border: 1.5px solid #e5e7eb; border-radius: 8px;
+    font-size: 1rem; outline: none; transition: border-color 0.2s;
+    background: #fafafa;
+  }
+  input:focus { border-color: #4f46e5; background: white; }
+
+  .btn {
+    display: block; width: 100%; margin-top: 1.25rem;
+    padding: 0.75rem; background: #4f46e5; color: white;
+    border: none; border-radius: 8px; font-size: 1rem;
+    font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s;
+  }
+  .btn:hover { background: #4338ca; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: #eef2ff; color: #4338ca; border-radius: 6px;
+    padding: 0.3rem 0.8rem; font-size: 0.85rem; font-weight: 500;
+    margin-bottom: 1.25rem;
+  }
+  .step-badge {
+    display: inline-block; background: #f3f4f6; color: #374151;
+    border-radius: 6px; padding: 0.25rem 0.7rem;
+    font-size: 0.82rem; font-weight: 500; margin-bottom: 0.5rem;
+  }
+
+  .toast {
+    position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: #166534; color: white; padding: 0.65rem 1.25rem;
+    border-radius: 10px; font-size: 0.9rem; font-weight: 500;
+    transition: transform 0.3s ease; pointer-events: none; white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #991b1b; }
+
+  #name-section { }
+  #main-section { display: none; }
+
+  .history { margin-top: 1.5rem; border-top: 1px solid #f3f4f6; padding-top: 1rem; }
+  .history-title { font-size: 0.78rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; }
+  .history-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.35rem 0; border-bottom: 1px solid #f9fafb; font-size: 0.85rem;
+  }
+  .history-row .s { color: #6b7280; }
+  .history-row .v { font-family: monospace; font-weight: 600; color: #1a1a2e; }
+  .history-row .del {
+    background: none; border: none; color: #ef4444; cursor: pointer;
+    font-size: 0.8rem; opacity: 0.4; transition: opacity 0.15s; padding: 0 0.2rem;
+  }
+  .history-row .del:hover { opacity: 1; }
+
+  /* Config-Hinweis */
+  .config-hint {
+    background: #fef9c3; border: 1px solid #fde047; border-radius: 8px;
+    padding: 0.75rem 1rem; font-size: 0.82rem; color: #713f12; margin-bottom: 1.5rem;
+    display: none;
+  }
+  .config-hint.visible { display: block; }
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="card">
+  <h1>🔢 Newton-Verfahren</h1>
+  <p class="subtitle">Gib nach jedem Iterationsschritt deinen aktuellen Näherungswert ein.</p>
+
+  <div class="config-hint" id="cfg-hint">
+    ⚠️ Noch keine Firebase-URL eingetragen! Bitte öffne die HTML-Datei und trage deine Datenbank-URL bei <code>FIREBASE_URL</code> ein.
+  </div>
+
+  <!-- Schritt 1: Name -->
+  <div id="name-section">
+    <label>Dein Name</label>
+    <input type="text" id="inp-name" placeholder="z.B. Lena" autocomplete="off" />
+    <label>Dein Startwert x₀</label>
+    <input type="text" id="inp-x0" placeholder="z.B. 2" autocomplete="off" />
+    <button class="btn" id="btn-name">Weiter →</button>
+  </div>
+
+  <!-- Schritt 2: Werte einreichen -->
+  <div id="main-section">
+    <div class="badge" id="name-badge"></div>
+    <div class="step-badge" id="step-badge">Schritt 1</div>
+
+    <label>Iterationsschritt n</label>
+    <input type="number" id="inp-step" min="1" max="30" value="1" />
+
+    <label>Näherungswert x<sub>n</sub></label>
+    <input type="text" id="inp-value" placeholder="z.B. 1.41421356..." autocomplete="off" />
+
+    <button class="btn" id="submit-btn">Wert einreichen ✓</button>
+
+    <div class="history" id="history-box" style="display:none">
+      <div class="history-title">Meine Einreichungen</div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  ▶ HIER DEINE FIREBASE-URL EINTRAGEN:
+var FIREBASE_URL = 'https://iteration-visualizer-default-rtdb.europe-west1.firebasedatabase.app/';
+//  Beispiel: 'https://iteration-visualizer-default-rtdb.europe-west1.firebasedatabase.app/'
+// ══════════════════════════════════════════════
+
+var BASE_URL = FIREBASE_URL.replace(/\/+$/, '');
+var KURS_ID = 'kurs1';
+
+// Stabiler zufälliger Key pro Browser-Session
+var CLIENT_KEY = sessionStorage.getItem('newton_client_key');
+if (!CLIENT_KEY) {
+  CLIENT_KEY = Math.random().toString(36).slice(2, 10);
+  sessionStorage.setItem('newton_client_key', CLIENT_KEY);
+}
+
+var myName = '', myX0 = '', myHistory = [];
+
+// Schritt bei jedem Laden auf 1 zurücksetzen
+window.addEventListener('load', function() {
+  $('inp-step').value = 1;
+  $('step-badge').textContent = 'Schritt 1';
+});
+
+function $(id) { return document.getElementById(id); }
+
+function showToast(msg, err) {
+  var t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err ? ' error' : '') + ' show';
+  setTimeout(function() { t.className = 'toast' + (err ? ' error' : ''); }, 2200);
+}
+
+// Firebase-Verbindung prüfen
+if (!FIREBASE_URL || FIREBASE_URL.indexOf('DEINE_FIREBASE') !== -1) {
+  $('cfg-hint').classList.add('visible');
+}
+
+function doSetName() {
+  var n = $('inp-name').value.trim();
+  var x = $('inp-x0').value.trim();
+  if (!n) { showToast('Bitte Namen eingeben', true); return; }
+  myName = n; myX0 = x;
+  $('name-section').style.display = 'none';
+  $('main-section').style.display = 'block';
+  $('name-badge').textContent = '👤 ' + myName + (myX0 ? '  |  x₀ = ' + myX0 : '');
+}
+
+function doSubmit() {
+  if (FIREBASE_URL.indexOf('DEINE_FIREBASE') !== -1) {
+    showToast('Firebase-URL fehlt!', true); return;
+  }
+  var step = parseInt($('inp-step').value);
+  var rawVal = $('inp-value').value.replace(',', '.').trim();
+  if (!rawVal || isNaN(parseFloat(rawVal))) {
+    showToast('Bitte gültigen Zahlenwert eingeben', true); return;
+  }
+  $('submit-btn').disabled = true;
+
+  var entry = { name: myName, x0: myX0, step: step, value: rawVal, ts: Date.now() };
+  var key = CLIENT_KEY + 's' + step;
+  entry.key = key;
+  var url = BASE_URL + '/' + KURS_ID + '/submissions/' + key + '.json';
+
+  fetch(url, { method: 'PUT', body: JSON.stringify(entry) })
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      myHistory.unshift(entry);
+      renderHistory();
+      showToast('✓ Schritt ' + step + ' eingereicht!');
+      $('inp-step').value = step + 1;
+      $('inp-value').value = '';
+      $('step-badge').textContent = 'Schritt ' + (step + 1);
+      $('inp-value').focus();
+    })
+    .catch(function(e) {
+      showToast('Fehler beim Senden: ' + e.message, true);
+    })
+    .finally(function() {
+      $('submit-btn').disabled = false;
+    });
+}
+
+function deleteEntry(step) {
+  // Nur lokal ausblenden (wie Lehreransicht) – kein Firebase-DELETE
+  myHistory = myHistory.filter(function(e) { return e.step !== step; });
+  // Wenn höchster Schritt gelöscht → Schritt zurücksetzen
+  var maxStep = myHistory.length
+    ? Math.max.apply(null, myHistory.map(function(e) { return e.step; }))
+    : 0;
+  if (step > maxStep) {
+    $('inp-step').value = step;
+    $('step-badge').textContent = 'Schritt ' + step;
+  }
+  renderHistory();
+  showToast('Schritt ' + step + ' ausgeblendet');
+}
+
+function renderHistory() {
+  if (!myHistory.length) { $('history-box').style.display = 'none'; return; }
+  $('history-box').style.display = 'block';
+  $('history-list').innerHTML = myHistory.map(function(e) {
+    return '<div class="history-row">' +
+      '<span class="s">Schritt ' + e.step + '</span>' +
+      '<span class="v">' + esc(e.value) + '</span>' +
+      '<button class="del" data-step="' + e.step + '" onclick="deleteEntry(parseInt(this.dataset.step))" title="Ausblenden">✕</button>' +
+    '</div>';
+  }).join('');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Buttons verdrahten
+document.addEventListener('DOMContentLoaded', function() {
+  var nameBtn = $('btn-name');
+  if (nameBtn) nameBtn.addEventListener('click', doSetName);
+  var submitBtn = $('submit-btn');
+  if (submitBtn) submitBtn.addEventListener('click', doSubmit);
+});
+
+// Enter-Taste
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  if ($('main-section').style.display === 'block') doSubmit();
+  else doSetName();
+});
+</script>
+</body>
+</html>
