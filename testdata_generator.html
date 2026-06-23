@@ -106,9 +106,9 @@
     JavaScript-Ausdruck, z.B. <code style="color:#818cf8;">x*x - 2</code> oder <code style="color:#818cf8;">x*x*x - x - 2</code>
   </p>
   <label>f(x) =</label>
-  <input type="text" id="fx" value="x*x - 2" placeholder="x*x - 2" />
+  <input type="text" id="fx" value="x*x*x - 2*x-5" placeholder="x*x*x - 2*x-5" />
   <label>f'(x) = (Ableitung, für Newton)</label>
-  <input type="text" id="dfx" value="2*x" placeholder="2*x" />
+  <input type="text" id="dfx" value="3*x*x-2" placeholder="3*x*x-2" />
   <div style="margin-top:0.8rem;display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;">
     <button class="btn" onclick="updatePreview()">Vorschau aktualisieren</button>
     <span style="font-size:0.78rem;color:#4b5280;" id="root-hint"></span>
@@ -157,9 +157,12 @@
 <script>
 var COLORS = ['#818cf8','#6ee7b7','#fcd34d','#f9a8d4','#7dd3fc','#c4b5fd','#fda4af','#86efac','#fdba74','#a5f3fc'];
 var tnData = [
-  { name: 'TN1', x0: '2' },
-  { name: 'TN2', x0: '1.5' },
-  { name: 'TN3', x0: '-1' },
+  { name: 'Newton', x0: '2' },
+  { name: 'Raphson', x0: '1.5' },
+  { name: 'Fourier', x0: '-1' },
+  { name: 'Cauchy', x0: '5' },
+  { name: 'Kantorovich', x0: '-5.6' },
+  { name: 'Leibniz', x0: '-1.3' },
 ];
 
 function $(id) { return document.getElementById(id); }
