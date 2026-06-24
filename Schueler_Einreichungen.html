@@ -97,7 +97,7 @@
 <div class="toast" id="toast"></div>
 <div class="card">
   <h1>🔢 Newton-Verfahren</h1>
-  <p class="subtitle">Gib nach jedem Iterationsschritt deinen aktuellen Näherungswert ein.</p>
+  
 
   <div class="config-hint" id="cfg-hint">
     ⚠️ Noch keine Firebase-URL eingetragen! Bitte öffne die HTML-Datei und trage deine Datenbank-URL bei <code>FIREBASE_URL</code> ein.
@@ -105,15 +105,17 @@
 
   <!-- Schritt 1: Name -->
   <div id="name-section">
+    <p class="subtitle">Wähle einen Spitznamen und setze den Startwert x₀</p>
     <label>Dein Name</label>
-    <input type="text" id="inp-name" placeholder="z.B. Lena" autocomplete="off" />
+    <input type="text" id="inp-name" placeholder="z.B. Chuck Norris" autocomplete="off" />
     <label>Dein Startwert x₀</label>
-    <input type="text" id="inp-x0" placeholder="z.B. 2" autocomplete="off" />
+    <input type="text" id="inp-x0" placeholder="Wert zwischen -10 und 10, nicht nahe 2" autocomplete="off" />
     <button class="btn" id="btn-name">Weiter →</button>
   </div>
 
   <!-- Schritt 2: Werte einreichen -->
   <div id="main-section">
+   <p class="subtitle">Reiche nach jeder Iteration deinen aktuellen Wert ein. Gib dabei 6 Nachkommastellen an.</p>
     <div class="badge" id="name-badge"></div>
     <div class="step-badge" id="step-badge">Schritt 1</div>
 
